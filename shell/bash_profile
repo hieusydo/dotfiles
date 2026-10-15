@@ -1,0 +1,7 @@
+DOTFILES_ROOT=${DOTFILES_ROOT:-"${XDG_CONFIG_HOME:-$HOME/.config}/hdo-dotfiles"}
+
+. "$DOTFILES_ROOT/shell/environment.sh"
+
+case $- in
+  *i*) . "$HOME/.bashrc" ;;
+esac

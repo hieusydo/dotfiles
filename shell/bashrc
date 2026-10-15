@@ -1,0 +1,30 @@
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+DOTFILES_ROOT=${DOTFILES_ROOT:-"${XDG_CONFIG_HOME:-$HOME/.config}/hdo-dotfiles"}
+
+export OSH="$HOME/.oh-my-bash"
+OSH_THEME="font"
+DISABLE_AUTO_UPDATE=true
+OMB_USE_SUDO=false
+completions=(git ssh)
+aliases=(general)
+plugins=(git)
+
+if [ -r "$OSH/oh-my-bash.sh" ]; then
+  . "$OSH/oh-my-bash.sh"
+else
+  printf 'Oh My Bash is not installed; use install.sh --with-framework after approval, or continue without it.\n' >&2
+fi
+
+. "$DOTFILES_ROOT/shell/interactive.sh"
+
+if command -v fzf >/dev/null 2>&1; then
+  eval "$(fzf --bash)"
+fi
+
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init bash)"
+fi

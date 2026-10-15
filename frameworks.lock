@@ -1,0 +1,4 @@
+OH_MY_BASH_REPOSITORY='https://github.com/ohmybash/oh-my-bash.git'
+OH_MY_BASH_COMMIT='abf846186ab0a8a41ec5888e827ece6277dfe446'
+OH_MY_ZSH_REPOSITORY='https://github.com/ohmyzsh/ohmyzsh.git'
+OH_MY_ZSH_COMMIT='964ddf789b022b6958b27d02d7fa54f552de21e9'

@@ -1,0 +1,32 @@
+[[ -o interactive ]] || return
+
+DOTFILES_ROOT=${DOTFILES_ROOT:-"${XDG_CONFIG_HOME:-$HOME/.config}/hdo-dotfiles"}
+
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+zstyle ':omz:update' mode disabled
+plugins=(git)
+
+if [ -d "$HOME/.docker/completions" ]; then
+  fpath=("$HOME/.docker/completions" $fpath)
+fi
+
+if [ -r "$ZSH/oh-my-zsh.sh" ]; then
+  source "$ZSH/oh-my-zsh.sh"
+else
+  printf 'Oh My Zsh is not installed; use install.sh --with-framework after approval, or continue without it.\n' >&2
+fi
+
+source "$DOTFILES_ROOT/shell/interactive.sh"
+
+if [ -s "$HOME/.bun/_bun" ]; then
+  source "$HOME/.bun/_bun"
+fi
+
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
+
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh)"
+fi
