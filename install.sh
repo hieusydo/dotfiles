@@ -6,6 +6,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
 STATE_HOME=${XDG_STATE_HOME:-"$HOME/.local/state"}
 DOTFILES_LINK="$CONFIG_HOME/hdo-dotfiles"
+COPILOT_DIR=${COPILOT_HOME:-"$HOME/.copilot"}
 BACKUP_ROOT="$STATE_HOME/hdo-dotfiles/backups"
 BACKUP_DIR="$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)"
 LOCK_FILE=${DOTFILES_FRAMEWORK_LOCK:-"$SCRIPT_DIR/frameworks.lock"}
@@ -13,6 +14,7 @@ LOCK_FILE=${DOTFILES_FRAMEWORK_LOCK:-"$SCRIPT_DIR/frameworks.lock"}
 TARGET_SHELL=auto
 INSTALL_FRAMEWORKS=0
 INSTALL_NVIM=1
+INSTALL_AGENTS=1
 DRY_RUN=0
 BACKUP_USED=0
 TEMP_DIR=
@@ -42,6 +44,7 @@ Options:
   --shell auto|bash|zsh|both  Shell configuration to install (default: auto)
   --with-framework           Install the pinned Oh My Bash/Zsh framework
   --no-nvim                  Do not link the Neovim configuration
+  --no-agents                Do not link the Copilot CLI agent instructions
   --dry-run                  Print planned actions without changing files
   -h, --help                 Show this help
 EOF
@@ -60,6 +63,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-nvim)
       INSTALL_NVIM=0
+      shift
+      ;;
+    --no-agents)
+      INSTALL_AGENTS=0
       shift
       ;;
     --dry-run)
@@ -242,6 +249,10 @@ link_path "$SCRIPT_DIR" "$DOTFILES_LINK"
 
 if [ "$INSTALL_NVIM" -eq 1 ]; then
   link_path "$DOTFILES_LINK/nvim" "$CONFIG_HOME/nvim"
+fi
+
+if [ "$INSTALL_AGENTS" -eq 1 ]; then
+  link_path "$DOTFILES_LINK/agents/AGENTS.md" "$COPILOT_DIR/copilot-instructions.md"
 fi
 
 case "$TARGET_SHELL" in

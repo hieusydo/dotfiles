@@ -1,6 +1,6 @@
 # dotfiles
 
-Portable Bash, Zsh, and Neovim configuration for macOS and Linux.
+Portable Bash, Zsh, Neovim, and coding agent configuration for macOS and Linux.
 
 ## Safety model
 
@@ -49,6 +49,7 @@ Available options:
 --shell auto|bash|zsh|both
 --with-framework
 --no-nvim
+--no-agents
 --dry-run
 ```
 
@@ -57,6 +58,7 @@ The installer manages:
 - Bash: `~/.bashrc`, `~/.bash_profile`, and optionally pinned Oh My Bash
 - Zsh: `~/.zshrc`, `~/.zprofile`, and optionally pinned Oh My Zsh
 - Neovim: `${XDG_CONFIG_HOME:-~/.config}/nvim`
+- Copilot CLI: `${COPILOT_HOME:-~/.copilot}/copilot-instructions.md`
 - Repository link: `${XDG_CONFIG_HOME:-~/.config}/hdo-dotfiles`
 
 Start a fresh login shell after installation.
@@ -81,6 +83,53 @@ and set `HDO_ENABLE_NVIM_PLUGINS=1` in the machine-local shell configuration.
 Neovim refuses to load installed plugins whose Git commits differ from the
 lockfile, and it does not install missing plugins during startup. Do not replace
 this flow with a curl-pipe-shell installer.
+
+## Agent instructions
+
+`agents/AGENTS.md` contains personal rules for coding agents, for example
+writing style, the pull request description format, and the Google Docs format.
+It uses the [AGENTS.md](https://agents.md) format: plain Markdown with no
+required fields.
+
+The installer links the file as the Copilot CLI personal instruction file:
+
+```text
+${COPILOT_HOME:-~/.copilot}/copilot-instructions.md -> agents/AGENTS.md
+```
+
+Copilot CLI loads this file in every session, in every repository. It combines
+the file with the repository instructions, for example `AGENTS.md` and
+`.github/copilot-instructions.md`. Copilot CLI does not define a precedence
+order between these files, so do not write rules that conflict.
+
+On a remote host, clone this repository and run the installer. To install only
+the agent instructions, move any existing `copilot-instructions.md` to a backup
+location, then link the file:
+
+```sh
+mkdir -p ~/.copilot
+ln -s ~/Developer/dotfiles/agents/AGENTS.md ~/.copilot/copilot-instructions.md
+```
+
+To verify the setup, run `copilot instruction list`. The output must include
+`Home copilot-instructions.md`. In an interactive session, use `/instructions`.
+A running session does not reload instruction files. Start a new session after
+you change `agents/AGENTS.md`.
+
+Do not put private or work-specific rules in this repository. Put them in
+`~/.copilot/instructions/<name>.instructions.md` with `applyTo: "**"` in the
+front matter.
+
+Other agents read personal instructions from different locations:
+
+| Agent | Personal instruction file | Setup |
+|---|---|---|
+| Codex CLI | `~/.codex/AGENTS.md` | Link the file to `agents/AGENTS.md`. |
+| Claude Code | `~/.claude/CLAUDE.md` | Add the line `@~/.config/hdo-dotfiles/agents/AGENTS.md`. |
+
+Copilot cloud agent sessions, for example sessions that start with `/delegate`,
+run on GitHub. These sessions and Copilot code review do not read personal
+instruction files. They read only repository and organization instructions.
 
 ## Validation
 

@@ -2,6 +2,9 @@
 
 set -eu
 
+# Keep agent instruction links inside the isolated test homes.
+unset COPILOT_HOME
+
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/hdo-dotfiles-test.XXXXXX")
 
@@ -63,6 +66,9 @@ run_case() {
   [ -L "$home/$rc_file" ]
   [ -L "$config/hdo-dotfiles" ]
   [ -L "$config/nvim" ]
+  [ -L "$home/.copilot/copilot-instructions.md" ]
+  [ "$(readlink "$home/.copilot/copilot-instructions.md")" = "$config/hdo-dotfiles/agents/AGENTS.md" ]
+  [ -s "$home/.copilot/copilot-instructions.md" ]
 
   case "$shell_name" in
     bash)
@@ -150,6 +156,32 @@ default_output=$(
 
 if printf '%s\n' "$default_output" | grep -q '^Would install '; then
   printf 'Default installation must not fetch third-party frameworks.\n' >&2
+  exit 1
+fi
+
+copilot_home="$default_home/copilot-home"
+copilot_output=$(
+  HOME="$default_home" \
+    XDG_CONFIG_HOME="$default_home/config" \
+    XDG_STATE_HOME="$default_home/state" \
+    XDG_DATA_HOME="$default_home/data" \
+    COPILOT_HOME="$copilot_home" \
+    SHELL="$(command -v bash)" \
+    bash "$ROOT/install.sh" --shell bash --dry-run
+)
+printf '%s\n' "$copilot_output" |
+  grep -qxF "Would link $copilot_home/copilot-instructions.md -> $default_home/config/hdo-dotfiles/agents/AGENTS.md"
+
+no_agents_output=$(
+  HOME="$default_home" \
+    XDG_CONFIG_HOME="$default_home/config" \
+    XDG_STATE_HOME="$default_home/state" \
+    XDG_DATA_HOME="$default_home/data" \
+    SHELL="$(command -v bash)" \
+    bash "$ROOT/install.sh" --shell bash --dry-run --no-agents
+)
+if printf '%s\n' "$no_agents_output" | grep -q 'copilot-instructions\.md'; then
+  printf 'The --no-agents option must not link agent instructions.\n' >&2
   exit 1
 fi
 
