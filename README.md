@@ -8,9 +8,8 @@ Portable Bash, Zsh, Neovim, and coding agent configuration for macOS and Linux.
   from `frameworks.lock` only when `--with-framework` is provided.
 - The installer does not execute upstream installer scripts.
 - Existing configuration is moved into timestamped backups before symlinking.
-- Neovim plugins are not downloaded automatically. Review `THIRD_PARTY.md`
-  through your organization's approved-source process before installing them.
-  LinkedIn users must follow `go/ai-dev-safely`.
+- On first start, Neovim installs lazy.nvim and its plugins at the commits in
+  `nvim/lazy-lock.json`. It does not check for plugin updates.
 - Histories, credentials, SSH configuration, Kubernetes configuration, and
   machine-local values are not stored here.
 
@@ -76,13 +75,16 @@ repository and is sourced by both Bash and Zsh.
 
 ## Neovim plugins
 
-The exported Neovim configuration starts without network access or plugin
-execution. After every source in `THIRD_PARTY.md` is approved, install lazy.nvim
-at the commit in `nvim/lazy-lock.json`, restore the remaining pinned plugins,
-and set `HDO_ENABLE_NVIM_PLUGINS=1` in the machine-local shell configuration.
-Neovim refuses to load installed plugins whose Git commits differ from the
-lockfile, and it does not install missing plugins during startup. Do not replace
-this flow with a curl-pipe-shell installer.
+Neovim installs its plugins on first start. It clones lazy.nvim at the commit
+in `nvim/lazy-lock.json`, and lazy.nvim installs the other plugins at their
+commits in the same file. The first start needs `git` and network access. If
+the installation fails, Neovim starts without plugins and shows a warning.
+
+lazy.nvim does not check for updates. To update the plugins, run `:Lazy update`,
+then commit the changed `nvim/lazy-lock.json`. After you pull a changed
+lockfile on another host, run `:Lazy restore`.
+
+To skip the Neovim configuration on a host, run the installer with `--no-nvim`.
 
 ## Agent instructions
 
@@ -137,5 +139,5 @@ instruction files. They read only repository and organization instructions.
 ./tests/smoke.sh
 ```
 
-The smoke test creates local fake framework repositories and isolated home
-directories. It does not download or execute third-party framework code.
+The smoke test creates local fake framework and lazy.nvim repositories and
+isolated home directories. It does not download or execute third-party code.

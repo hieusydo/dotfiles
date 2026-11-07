@@ -1,11 +1,14 @@
 # Third-party dependencies
 
-Review these sources through your organization's approved-source process before
-installing or enabling them. LinkedIn users must follow `go/ai-dev-safely`.
-After approval, `install.sh --with-framework` fetches only the pinned official
-framework commits and never runs the upstream installation scripts. Neovim
-plugins remain disabled unless `HDO_ENABLE_NVIM_PLUGINS=1`, and missing plugins
-are never downloaded automatically.
+This file lists the third-party sources that this repository installs.
+
+`install.sh --with-framework` fetches only the pinned official framework
+commits and never runs the upstream installation scripts. Review the framework
+sources through your organization's approved-source process before you use this
+option. LinkedIn users must follow `go/ai-dev-safely`.
+
+Neovim installs the plugins below on first start, at the commits in
+`nvim/lazy-lock.json`.
 
 ## Shell frameworks
 

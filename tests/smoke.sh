@@ -209,23 +209,51 @@ grep -q 'Oh My Bash repository is not the expected official source' "$unapproved
 SHELL="$(command -v zsh)" "$ROOT/install.sh" --shell both --dry-run >/dev/null
 
 if command -v nvim >/dev/null 2>&1; then
-  nvim_home="$TMP_ROOT/home-nvim"
-  nvim_config="$nvim_home/config"
-  nvim_data="$nvim_home/data"
-  nvim_state="$nvim_home/state"
-  mkdir -p "$nvim_home" "$nvim_config" "$nvim_data" "$nvim_state"
-  ln -s "$ROOT/nvim" "$nvim_config/nvim"
+  # Redirect the lazy.nvim URL to local repositories so that the tests stay offline.
+  lazy_url='https://github.com/folke/lazy.nvim.git'
+  lazy_fixture="$TMP_ROOT/lazy-fixture"
+  mkdir -p "$lazy_fixture/lua/lazy"
+  printf 'return { setup = function(spec) vim.fn.writefile({ spec }, vim.env.HDO_TEST_LAZY_MARKER) end }\n' \
+    > "$lazy_fixture/lua/lazy/init.lua"
+  git -C "$lazy_fixture" init --quiet
+  git -C "$lazy_fixture" add lua
+  git -C "$lazy_fixture" -c user.name='Dotfiles Test' -c user.email='dotfiles-test@example.com' \
+    commit --quiet -m 'Add lazy.nvim fixture'
+  lazy_commit=$(git -C "$lazy_fixture" rev-parse HEAD)
+  git -C "$lazy_fixture" -c user.name='Dotfiles Test' -c user.email='dotfiles-test@example.com' \
+    commit --quiet --allow-empty -m 'Add a newer commit'
 
-  nvim_output=$(
-    HOME="$nvim_home" \
-      XDG_CONFIG_HOME="$nvim_config" \
-      XDG_DATA_HOME="$nvim_data" \
-      XDG_STATE_HOME="$nvim_state" \
+  run_nvim() {
+    nvim_test_home=$1
+    lazy_source=$2
+    HOME="$nvim_test_home" \
+      XDG_CONFIG_HOME="$nvim_test_home/config" \
+      XDG_DATA_HOME="$nvim_test_home/data" \
+      XDG_STATE_HOME="$nvim_test_home/state" \
+      GIT_CONFIG_COUNT=1 \
+      GIT_CONFIG_KEY_0="url.$lazy_source.insteadOf" \
+      GIT_CONFIG_VALUE_0="$lazy_url" \
+      HDO_TEST_LAZY_MARKER="$nvim_test_home/lazy-setup" \
       nvim --headless '+qa' 2>&1
-  )
+  }
 
-  [ ! -e "$nvim_data/nvim/lazy" ]
-  printf '%s\n' "$nvim_output" | grep -q 'Neovim plugins are disabled'
+  # Plugins are on by default, and lazy.nvim is installed at its locked commit.
+  nvim_home="$TMP_ROOT/home-nvim"
+  mkdir -p "$nvim_home/config"
+  cp -R "$ROOT/nvim" "$nvim_home/config/nvim"
+  printf '{ "lazy.nvim": { "branch": "main", "commit": "%s" } }\n' "$lazy_commit" \
+    > "$nvim_home/config/nvim/lazy-lock.json"
+  run_nvim "$nvim_home" "$lazy_fixture" >/dev/null
+  [ "$(git -C "$nvim_home/data/nvim/lazy/lazy.nvim" rev-parse HEAD)" = "$lazy_commit" ]
+  [ "$(cat "$nvim_home/lazy-setup")" = plugins ]
+
+  # If lazy.nvim cannot be cloned, Neovim starts without plugins.
+  offline_home="$TMP_ROOT/home-nvim-offline"
+  mkdir -p "$offline_home/config"
+  ln -s "$ROOT/nvim" "$offline_home/config/nvim"
+  offline_output=$(run_nvim "$offline_home" "$TMP_ROOT/missing-lazy")
+  [ ! -e "$offline_home/data/nvim/lazy/lazy.nvim" ]
+  printf '%s\n' "$offline_output" | grep -q 'Could not install lazy.nvim'
 fi
 
 printf 'Shell installer smoke tests passed.\n'
