@@ -208,6 +208,23 @@ grep -q 'Oh My Bash repository is not the expected official source' "$unapproved
 
 SHELL="$(command -v zsh)" "$ROOT/install.sh" --shell both --dry-run >/dev/null
 
+path_home="$TMP_ROOT/home-path"
+mkdir -p "$path_home/.local/bin"
+for shell_name in bash zsh; do
+  path_output=$(
+    env -i \
+      HOME="$path_home" \
+      PATH="/usr/bin:$path_home/.local/bin:/bin" \
+      "$(command -v "$shell_name")" -c \
+      '. "$1/shell/environment.sh"; . "$1/shell/environment.sh"; printf "%s" "$PATH"' \
+      sh "$ROOT"
+  )
+  if [ "$path_output" != "$path_home/.local/bin:/usr/bin:/bin" ]; then
+    printf '%s did not move ~/.local/bin to the front of PATH: %s\n' "$shell_name" "$path_output" >&2
+    exit 1
+  fi
+done
+
 if command -v nvim >/dev/null 2>&1; then
   # Redirect the lazy.nvim URL to local repositories so that the tests stay offline.
   lazy_url='https://github.com/folke/lazy.nvim.git'

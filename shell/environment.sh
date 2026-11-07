@@ -1,9 +1,20 @@
+# Move an existing entry to the front. System profiles can put /usr/local/bin
+# ahead of an inherited ~/.local/bin, for example in new tmux panes.
 path_prepend() {
   [ -d "$1" ] || return 0
-  case ":${PATH:-}:" in
-    *":$1:"*) ;;
-    *) PATH="$1${PATH:+:$PATH}" ;;
-  esac
+  path_prepend_rest=${PATH:-}
+  path_prepend_result=$1
+  while [ -n "$path_prepend_rest" ]; do
+    path_prepend_entry=${path_prepend_rest%%:*}
+    case "$path_prepend_rest" in
+      *:*) path_prepend_rest=${path_prepend_rest#*:} ;;
+      *) path_prepend_rest= ;;
+    esac
+    [ "$path_prepend_entry" = "$1" ] ||
+      path_prepend_result="$path_prepend_result:$path_prepend_entry"
+  done
+  PATH=$path_prepend_result
+  unset path_prepend_entry path_prepend_rest path_prepend_result
 }
 
 export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
