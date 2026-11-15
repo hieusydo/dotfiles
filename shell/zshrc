@@ -1,5 +1,15 @@
 [[ -o interactive ]] || return
 
+typeset -U path PATH fpath FPATH
+
+if [ -x "/opt/homebrew/bin/brew" ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x "/usr/local/bin/brew" ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+elif [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
 DOTFILES_ROOT=${DOTFILES_ROOT:-"${XDG_CONFIG_HOME:-$HOME/.config}/hdo-dotfiles"}
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -30,3 +40,20 @@ fi
 if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh)"
 fi
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/hieudo/.local/bin:$PATH"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/hieudo/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+
+export PATH=/opt/homebrew/opt/openjdk/bin:$PATH
+
+export JAVA_HOME=$(/usr/libexec/java_home)
+export PATH="$JAVA_HOME/bin:$PATH"
+
+
+# opencode
+export PATH=/Users/hieudo/.opencode/bin:$PATH
