@@ -89,7 +89,8 @@ To skip the Neovim configuration on a host, run the installer with `--no-nvim`.
 ## Agent instructions
 
 `agents/AGENTS.md` contains personal rules for coding agents, for example
-writing style, the pull request description format, and the Google Docs format.
+writing style, the pull request description format, the rules for GitHub
+comments, and the Google Docs format.
 It uses the [AGENTS.md](https://agents.md) format: plain Markdown with no
 required fields.
 
